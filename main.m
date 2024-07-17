@@ -33,7 +33,7 @@ hButton = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
                     'Position', [20, 20, 100, 30], ...
                     'Callback', {@updatePlot, hAxes});
 
-% Initial plot, if you change dimension number, change this area.
+% Initial plot, if you change the dimension number, change this area.
 fcontour(hAxes, func, 'LevelStep', 5);
 colorbar(hAxes);
 hold(hAxes, 'on');
@@ -49,7 +49,8 @@ g_func = func;
 g_dimensionNumber = dimensionNumber;
 g_pointsNumber = pointsNumber;
 
-% Callback function to update the plot
+
+% Callback function to update the plot, Also update plots if you change the dimension number! 
 function updatePlot(~, ~, hAxes)
     global g_points g_func g_dimensionNumber g_pointsNumber;
 
