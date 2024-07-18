@@ -44,7 +44,7 @@ hold(hAxes, 'on');
 pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func);
 plot3(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), pointsSorted(:, 3), 'bo', 'MarkerFaceColor', 'b');
 text(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), pointsSorted(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(pointsSorted, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-plot3(hAxes, [pointsSorted(:, 1); pointsSorted(1, 1)], [pointsSorted(:, 2); pointsSorted(1, 2)], [pointsSorted(:, 3); pointsSorted(1, 3)], 'r-'); 
+plotTetrahedron(hAxes, pointsSorted);
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -78,10 +78,19 @@ function updatePlot(~, ~, hAxes)
     hold(hAxes, 'on');
     plot3(hAxes, g_points(:, 1), g_points(:, 2), g_points(:, 3), 'bo', 'MarkerFaceColor', 'b');
     text(hAxes, g_points(:, 1), g_points(:, 2), g_points(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(g_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-    plot3(hAxes, [g_points(:,1); g_points(1,1)], [g_points(:,2); g_points(1,2)], [g_points(:,3); g_points(1,3)], 'r-');
+    plotTetrahedron(hAxes, g_points);
     
     g_stepNo = g_stepNo + 1;
     disp(['Step number: ', num2str(g_stepNo)]);
     disp(['Standart deviation of points is respectively: ']);
     disp(num2str(std(g_points)));
+end
+function plotTetrahedron(hAxes, pointsSorted)
+    % Plot lines between all vertices of the tetrahedron
+    plot3(hAxes, [pointsSorted(1,1) pointsSorted(2,1)], [pointsSorted(1,2) pointsSorted(2,2)], [pointsSorted(1,3) pointsSorted(2,3)], 'r-');
+    plot3(hAxes, [pointsSorted(1,1) pointsSorted(3,1)], [pointsSorted(1,2) pointsSorted(3,2)], [pointsSorted(1,3) pointsSorted(3,3)], 'r-');
+    plot3(hAxes, [pointsSorted(1,1) pointsSorted(4,1)], [pointsSorted(1,2) pointsSorted(4,2)], [pointsSorted(1,3) pointsSorted(4,3)], 'r-');
+    plot3(hAxes, [pointsSorted(2,1) pointsSorted(3,1)], [pointsSorted(2,2) pointsSorted(3,2)], [pointsSorted(2,3) pointsSorted(3,3)], 'r-');
+    plot3(hAxes, [pointsSorted(2,1) pointsSorted(4,1)], [pointsSorted(2,2) pointsSorted(4,2)], [pointsSorted(2,3) pointsSorted(4,3)], 'r-');
+    plot3(hAxes, [pointsSorted(3,1) pointsSorted(4,1)], [pointsSorted(3,2) pointsSorted(4,2)], [pointsSorted(3,3) pointsSorted(4,3)], 'r-');
 end
