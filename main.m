@@ -77,4 +77,6 @@ function updatePlot(~, ~, hAxes)
     
     g_stepNo = g_stepNo + 1;
     disp('Step number : ' + string(g_stepNo));
+    disp(['Standart deviation of points is respectively: ']);
+    disp(num2str(std(g_points)));
 end
