@@ -10,6 +10,9 @@ points = [];
 Results_points = [];
 stepNo = 0;
 
+global points_history;
+points_history = {};
+
 %% I preferred to take points without using any input, but you can if you want.
 p1 = [4.1, 3.6, 3];
 p2 = [2.8, 2.4, 10];
@@ -17,6 +20,7 @@ p3 = [-3, 5.2, -5];
 p4 = [3, 2, -4];
 
 points = [p1; p2; p3; p4];
+points_history{1} = points;
 
 %{
 for i = 1:pointsNumber
@@ -31,9 +35,13 @@ end
 %% Create GUI
 f = figure('Name', 'Nelder Mead Method', 'Position', [100, 100, 800, 600]);
 hAxes = axes('Parent', f, 'Position', [0.1, 0.3, 0.8, 0.6]);
-hButton = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
+hButtonNext = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
                     'Position', [20, 20, 100, 30], ...
                     'Callback', {@updatePlot, hAxes});
+
+hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
+                    'Position', [180, 20, 100, 30], ...
+                    'Callback', {@previousPlot, hAxes});
 
 % Initial plot, if you change dimension number, change this area.
 [x, y] = meshgrid(-5:0.5:5, -5:0.5:5);
@@ -45,6 +53,7 @@ pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func);
 plot3(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), pointsSorted(:, 3), 'bo', 'MarkerFaceColor', 'b');
 text(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), pointsSorted(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(pointsSorted, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 plotTetrahedron(hAxes, pointsSorted);
+title('Step number : ' + string(stepNo));
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -56,7 +65,7 @@ g_stepNo = stepNo;
 
 % Callback function to update the plot
 function updatePlot(~, ~, hAxes)
-    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
+    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history;
 
     if isempty(g_points)
         return; % Exit if points is empty
@@ -81,10 +90,39 @@ function updatePlot(~, ~, hAxes)
     plotTetrahedron(hAxes, g_points);
     
     g_stepNo = g_stepNo + 1;
-    disp(['Step number: ', num2str(g_stepNo)]);
-    disp(['Standart deviation of points is respectively: ']);
+    points_history{g_stepNo + 1} = g_points;
+    title('Step number : ' + string(g_stepNo));
+    
+    disp(['Standard deviation of points is respectively: ']);
     disp(num2str(std(g_points)));
 end
+
+% Callback function to go back to the previous plot
+function previousPlot(~, ~, hAxes)
+    global g_stepNo points_history g_func;
+
+    if g_stepNo <= 0
+        return; % Exit if there are no previous steps
+    end
+
+    prev_points = points_history{g_stepNo}; % Retrieve previous points
+    g_stepNo = g_stepNo - 1;
+
+    cla(hAxes);
+    [x, y] = meshgrid(-5:0.5:5, -5:0.5:5);
+    z = arrayfun(@(x, y) g_func(x, y, 0), x, y); % For 3D mesh, fixing z dimension to 0
+    mesh(hAxes, x, y, z);
+    colorbar(hAxes);
+    hold(hAxes, 'on');
+    plot3(hAxes, prev_points(:, 1), prev_points(:, 2), prev_points(:, 3), 'bo', 'MarkerFaceColor', 'b');
+    text(hAxes, prev_points(:, 1), prev_points(:, 2), prev_points(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(prev_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+    plotTetrahedron(hAxes, prev_points);
+    
+    title('Step number : ' + string(g_stepNo));
+    disp(['Standard deviation of points is respectively: ']);
+    disp(num2str(std(prev_points)));
+end
+
 function plotTetrahedron(hAxes, pointsSorted)
     % Plot lines between all vertices of the tetrahedron
     plot3(hAxes, [pointsSorted(1,1) pointsSorted(2,1)], [pointsSorted(1,2) pointsSorted(2,2)], [pointsSorted(1,3) pointsSorted(2,3)], 'r-');
