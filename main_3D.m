@@ -1,5 +1,4 @@
 clear all; clc;
-
 %% Before starting the process, change the numbers, function, and initialization.
 % dimensionNumber is the number of the dimension of the function
 dimensionNumber = 3;
@@ -43,10 +42,21 @@ hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
                     'Position', [180, 20, 100, 30], ...
                     'Callback', {@previousPlot, hAxes});
 
-% Initial plot, if you change dimension number, change this area.
-[x, y] = meshgrid(-5:0.5:5, -5:0.5:5);
-z = arrayfun(@(x, y) func(x, y, 0), x, y); % For 3D mesh, fixing z dimension to 0
-mesh(hAxes, x, y, z);
+center = mean(points);
+x1 = center(1);
+y1 = center(2);
+z1 = center(3);
+[X, Y, Z] = sphere(32);
+x = [x1 + 0.5*X(:); x1 + 0.75*X(:); x1 + X(:)];
+y = [y1 + 0.5*Y(:); y1 + 0.75*Y(:); y1 + Y(:)];
+z = [z1 + 0.5*Z(:); z1 + 0.75*Z(:); z1 + Z(:)];
+
+S = repmat([50,25,10],numel(X),1);
+C = repmat([1,2,3],numel(X),1);
+s = S(:);
+c = C(:);
+scatter3(x,y,z,s,c)
+view(40,35)
 colorbar(hAxes);
 hold(hAxes, 'on');
 pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func);
@@ -80,9 +90,20 @@ function updatePlot(~, ~, hAxes)
     end
 
     cla(hAxes);
-    [x, y] = meshgrid(-5:0.5:5, -5:0.5:5);
-    z = arrayfun(@(x, y) g_func(x, y, 0), x, y); % For 3D mesh, fixing z dimension to 0
-    mesh(hAxes, x, y, z);
+    center = mean(g_points);
+    x1 = center(1);
+    y1 = center(2);
+    z1 = center(3);
+    [X, Y, Z] = sphere(32);
+    x = [x1 + 0.5*X(:); x1 + 0.75*X(:); x1 + X(:)];
+    y = [y1 + 0.5*Y(:); y1 + 0.75*Y(:); y1 + Y(:)];
+    z = [z1 + 0.5*Z(:); z1 + 0.75*Z(:); z1 + Z(:)];
+    S = repmat([50,25,10],numel(X),1);
+    C = repmat([1,2,3],numel(X),1);
+    s = S(:);
+    c = C(:);
+    scatter3(x,y,z,s,c)
+    view(40,35)
     colorbar(hAxes);
     hold(hAxes, 'on');
     plot3(hAxes, g_points(:, 1), g_points(:, 2), g_points(:, 3), 'bo', 'MarkerFaceColor', 'b');
@@ -99,7 +120,7 @@ end
 
 % Callback function to go back to the previous plot
 function previousPlot(~, ~, hAxes)
-    global g_stepNo points_history g_func;
+    global g_stepNo points_history g_func g_points;
 
     if g_stepNo <= 0
         return; % Exit if there are no previous steps
@@ -107,11 +128,23 @@ function previousPlot(~, ~, hAxes)
 
     prev_points = points_history{g_stepNo}; % Retrieve previous points
     g_stepNo = g_stepNo - 1;
+    g_points = prev_points;
 
     cla(hAxes);
-    [x, y] = meshgrid(-5:0.5:5, -5:0.5:5);
-    z = arrayfun(@(x, y) g_func(x, y, 0), x, y); % For 3D mesh, fixing z dimension to 0
-    mesh(hAxes, x, y, z);
+    center = mean(prev_points);
+    x1 = center(1);
+    y1 = center(2);
+    z1 = center(3);
+    [X, Y, Z] = sphere(32);
+    x = [x1 + 0.5*X(:); x1 + 0.75*X(:); x1 + X(:)];
+    y = [y1 + 0.5*Y(:); y1 + 0.75*Y(:); y1 + Y(:)];
+    z = [z1 + 0.5*Z(:); z1 + 0.75*Z(:); z1 + Z(:)];
+    S = repmat([50,25,10],numel(X),1);
+    C = repmat([1,2,3],numel(X),1);
+    s = S(:);
+    c = C(:);
+    scatter3(x,y,z,s,c)
+    view(40,35)
     colorbar(hAxes);
     hold(hAxes, 'on');
     plot3(hAxes, prev_points(:, 1), prev_points(:, 2), prev_points(:, 3), 'bo', 'MarkerFaceColor', 'b');
