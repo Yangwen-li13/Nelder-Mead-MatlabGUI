@@ -20,7 +20,6 @@ p3 = [-3, 5.2];
 
 points = [p1; p2; p3];
 
-
 %{
 for i = 1:pointsNumber
     for k = 1:dimensionNumber
@@ -32,15 +31,14 @@ end
 
 points_history{1} = points;
 %% After initialization, let's recall functions.
-
 %% Create GUI
 f = figure('Name', 'Nelder Mead Method', 'Position', [100, 100, 800, 600]);
 hAxes = axes('Parent', f, 'Position', [0.1, 0.3, 0.8, 0.6]);
-hButtonUpdate = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
+hButtonNext = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
                     'Position', [20, 20, 100, 30], ...
                     'Callback', {@updatePlot, hAxes});
 
-hButtonBack = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
+hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
                     'Position', [180, 20, 100, 30], ...
                     'Callback', {@previousPlot, hAxes});
 
