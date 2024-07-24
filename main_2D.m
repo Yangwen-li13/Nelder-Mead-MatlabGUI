@@ -42,6 +42,12 @@ hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
                     'Position', [180, 20, 100, 30], ...
                     'Callback', {@previousPlot, hAxes});
 
+global standartDeviationScreen;
+standartDeviationScreen = uicontrol('Style', 'text', 'String', 'Std Dev: ', ...
+                    'Position', [320, 20, 200, 30]);
+
+
+
 % Initial plot, if you change dimension number, change this area.
 fcontour(hAxes, func, 'LevelStep', 5);
 colorbar(hAxes);
@@ -50,7 +56,12 @@ pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func);
 plot(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), 'bo', 'MarkerFaceColor', 'b');
 text(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), arrayfun(@(n) sprintf('S%d', n), 1:size(pointsSorted, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 plot(hAxes, [pointsSorted(:, 1); pointsSorted(1, 1)], [pointsSorted(:, 2); pointsSorted(1, 2)], 'r-'); 
+
 title('Step number : ' + string(stepNo));
+global std_dev;
+std_dev = std(points);
+set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2))]);
+
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -62,7 +73,8 @@ g_stepNo = stepNo;
 
 % Callback function to update the plot
 function updatePlot(~, ~, hAxes)
-    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history;
+    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev;
+    global standartDeviationScreen;
 
     if isempty(g_points)
         return; % Exit if points is empty
@@ -90,12 +102,12 @@ function updatePlot(~, ~, hAxes)
 
     
     title('Step number : ' + string(g_stepNo));
-    disp(['Standart deviation of points is respectively: ']);
-    disp(num2str(std(g_points)));
+    std_dev = std(g_points);
+    set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2))]);
 end
 
 function previousPlot(~, ~, hAxes)
-    global g_stepNo points_history g_func g_points;
+    global g_stepNo points_history g_func g_points std_dev standartDeviationScreen;
 
     if g_stepNo <= 0
         return; % Exit if there are no previous steps
@@ -114,6 +126,6 @@ function previousPlot(~, ~, hAxes)
     plot(hAxes, [prev_points(:,1); prev_points(1,1)], [prev_points(:,2); prev_points(1,2)], 'r-');
     
     title('Step number : ' + string(g_stepNo));
-    disp(['Standart deviation of points is respectively: ']);
-    disp(num2str(std(prev_points)));
+    std_dev = std(g_points);
+    set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2))]);
 end
