@@ -2,80 +2,79 @@ clear all; clc;
 %% Before starting the process, change the numbers, function, and initialization.
 % dimensionNumber is the number of the dimension of the function
 dimensionNumber = 3;
-% pointsNumber depends on the shape.
 pointsNumber = dimensionNumber + 1;
+
 func = @(x, y, z) x.^2 + y.^2 + z.^2;
-points = [];
-Results_points = [];
+
 stepNo = 0;
 
-global points_history;
+global volume_history points_history std_dev_history;
 points_history = {};
+std_dev_history = {};
+volume_history = {};
 
-%% I preferred to take points without using any input, but you can if you want.
+%% Initial points
 p1 = [4.1, 3.6, 3];
 p2 = [2.8, 2.4, 10];
 p3 = [-3, 5.2, -5];
 p4 = [3, 2, -4];
 
 points = [p1; p2; p3; p4];
+
 points_history{1} = points;
-
-%{
-for i = 1:pointsNumber
-    for k = 1:dimensionNumber
-    message = 'Select ' + string(i) + 'th point and ' + string(k) + 'th dimension \n';
-    points(i,k) = input(message);
-    end
-end
-%}
-%% After initialization, let's recall functions.
-
 %% Create GUI
 f = figure('Name', 'Nelder Mead Method', 'Position', [100, 100, 800, 600]);
-hAxes = axes('Parent', f, 'Position', [0.1, 0.3, 0.8, 0.6]);
+
+hAxes = subplot(3, 3, [1 2 4 5], 'Parent', f);
+volumePlot = subplot(3, 3, 3, 'Parent', f);
+stdDevPlot = subplot(3, 3, 6, 'Parent', f);
+
 hButtonNext = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
-                    'Position', [20, 20, 100, 30], ...
-                    'Callback', {@updatePlot, hAxes});
+                        'Position', [260, 20, 100, 30], ...
+                        'Callback', {@updatePlot, hAxes, volumePlot, stdDevPlot});
 
 hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
-                    'Position', [180, 20, 100, 30], ...
-                    'Callback', {@previousPlot, hAxes});
+                        'Position', [380, 20, 100, 30], ...
+                        'Callback', {@previousPlot, hAxes, volumePlot, stdDevPlot});
 
-global standartDeviationScreen;
-standartDeviationScreen = uicontrol('Style', 'text', 'String', 'Std Dev: ', ...
-                                'Position', [320, 20, 200, 30]);
+global nextCase;
+nextCase = uicontrol('Style', 'text', 'String', 'Next Case', ...
+                        'Position', [270, 80, 200, 50]);
 
-global currentCase;
-currentCase = uicontrol('Style', 'text', 'String', 'Case ', ...
-                    'Position', [640, 20, 200, 30]);
-
-center = mean(points);
-x1 = center(1);
-y1 = center(2);
-z1 = center(3);
-[X, Y, Z] = sphere(32);
-x = [x1 + 0.5*X(:); x1 + 0.75*X(:); x1 + X(:)];
-y = [y1 + 0.5*Y(:); y1 + 0.75*Y(:); y1 + Y(:)];
-z = [z1 + 0.5*Z(:); z1 + 0.75*Z(:); z1 + Z(:)];
-
-S = repmat([50,25,10],numel(X),1);
-C = repmat([1,2,3],numel(X),1);
-s = S(:);
-c = C(:);
-scatter3(x,y,z,s,c)
-view(40,35)
-colorbar(hAxes);
+%% Initial plot
+cla(hAxes);
+[points, Results_points] = sortVectors(pointsNumber, dimensionNumber, points, func);
+scatter3(hAxes, points(:,1), points(:,2), points(:,3), 'bo', 'filled');
+text(hAxes, points(:,1), points(:,2), points(:,3), arrayfun(@(n) sprintf('S%d', n), 1:size(points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+grid(hAxes, 'minor');
 hold(hAxes, 'on');
-pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func);
-plot3(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), pointsSorted(:, 3), 'bo', 'MarkerFaceColor', 'b');
-text(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), pointsSorted(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(pointsSorted, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-plotTetrahedron(hAxes, pointsSorted);
+plotTetrahedron(hAxes, points);
 
-title('Step number : ' + string(stepNo));
-global std_dev;
-std_dev = std(points);
-set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2)), '     z :', num2str(1, 3)]);
+            
+title(hAxes, 'Searching Parameters of the Fin via Nelder-Meads Method');
+xlabel(hAxes,'Step Number : ' + string(stepNo));
+
+
+% This is to see next step in the figure;
+NelderMead(points, func);  
+
+
+std_dev = std(Results_points);
+std_dev_history{1} = std_dev;
+
+volume = computeVolume(points);
+volume_history{1} = volume;
+
+hold(volumePlot, 'on');
+grid(volumePlot, 'minor');
+plot(volumePlot, stepNo, volume, 'ro-', 'MarkerFaceColor', 'b');
+title(volumePlot, 'Volume of the Tetrahedron');
+
+hold(stdDevPlot, 'on');
+grid(stdDevPlot, 'minor');
+plot(stdDevPlot, stepNo, std_dev, 'ro-', 'MarkerFaceColor', 'r');
+title(stdDevPlot, 'Standart Deviation of Function Values');
+
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -85,87 +84,107 @@ g_dimensionNumber = dimensionNumber;
 g_pointsNumber = pointsNumber;
 g_stepNo = stepNo;
 
-% Callback function to update the plot
-function updatePlot(~, ~, hAxes)
-    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev standartDeviationScreen;
-
-    if isempty(g_points)
-        return; % Exit if points is empty
-    end
+%% Callback function to update the plot
+function updatePlot(~, ~, hAxes, volumePlot, stdDevPlot)
+    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev_history volume_history;
     
-    pointsSorted = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
-    g_points = NelderMead(pointsSorted, g_func);
-    
-    % Ensure points is not empty before plotting
     if isempty(g_points)
         return;
     end
 
+    [pointsSorted, Results_points] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    g_points = NelderMead(pointsSorted, g_func);
+
+    [pointsSortedtemp, ~] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    g_points = pointsSortedtemp; 
+    NelderMead(pointsSortedtemp, g_func);
+    
+
+
     cla(hAxes);
-    center = mean(g_points);
-    x1 = center(1);
-    y1 = center(2);
-    z1 = center(3);
-    [X, Y, Z] = sphere(32);
-    x = [x1 + 0.5*X(:); x1 + 0.75*X(:); x1 + X(:)];
-    y = [y1 + 0.5*Y(:); y1 + 0.75*Y(:); y1 + Y(:)];
-    z = [z1 + 0.5*Z(:); z1 + 0.75*Z(:); z1 + Z(:)];
-    S = repmat([50,25,10],numel(X),1);
-    C = repmat([1,2,3],numel(X),1);
-    s = S(:);
-    c = C(:);
-    scatter3(x,y,z,s,c)
-    view(40,35)
-    colorbar(hAxes);
-    hold(hAxes, 'on');
-    plot3(hAxes, g_points(:, 1), g_points(:, 2), g_points(:, 3), 'bo', 'MarkerFaceColor', 'b');
-    text(hAxes, g_points(:, 1), g_points(:, 2), g_points(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(g_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+    scatter3(hAxes, g_points(:,1), g_points(:,2), g_points(:,3), 'bo', 'filled');
+    text(hAxes, g_points(:,1), g_points(:,2), g_points(:,3), arrayfun(@(n) sprintf('S%d', n), 1:size(g_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
     plotTetrahedron(hAxes, g_points);
     
     g_stepNo = g_stepNo + 1;
     points_history{g_stepNo + 1} = g_points;
 
-    title('Step number : ' + string(g_stepNo));
+    xlabel(hAxes,['Step Number : ' + string(g_stepNo)]);
+    view(hAxes, 3);
+    grid(hAxes, 'on');
+
     std_dev = std(g_points);
-    set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2)), '     z :', num2str(1, 3)]);
+    std_dev_history{g_stepNo + 1} = std_dev;
+    volume_history{g_stepNo + 1} = computeVolume(g_points);
+
+    % Update volume plot
+    cla(volumePlot);
+    volume = computeVolume(g_points);
+    volume_history{g_stepNo + 1} = volume;
+    plot(volumePlot, 0:g_stepNo, cell2mat(volume_history(1 ,1:g_stepNo + 1)), 'bo-', 'MarkerFaceColor', 'b');
+    hold(volumePlot, 'on');
+
+
+    cla(stdDevPlot);
+    std_dev = std(Results_points);
+    std_dev_history{g_stepNo + 1} = std_dev;
+    plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
+    hold(stdDevPlot, 'on');
+
 end
 
-% Callback function to go back to the previous plot
-function previousPlot(~, ~, hAxes)
-    global g_stepNo points_history g_func g_points std_dev standartDeviationScreen;
+%% Callback function to go back to the previous plot
+function previousPlot(~, ~, hAxes, volumePlot, stdDevPlot)
+    global g_stepNo points_history std_dev_history volume_history g_points;
 
     if g_stepNo <= 0
-        return; % Exit if there are no previous steps
+        return;
     end
 
-    prev_points = points_history{g_stepNo}; % Retrieve previous points
-    g_stepNo = g_stepNo - 1;
+    prev_points = points_history{g_stepNo};
     g_points = prev_points;
+    g_stepNo = g_stepNo - 1;
 
     cla(hAxes);
-    center = mean(prev_points);
-    x1 = center(1);
-    y1 = center(2);
-    z1 = center(3);
-    [X, Y, Z] = sphere(32);
-    x = [x1 + 0.5*X(:); x1 + 0.75*X(:); x1 + X(:)];
-    y = [y1 + 0.5*Y(:); y1 + 0.75*Y(:); y1 + Y(:)];
-    z = [z1 + 0.5*Z(:); z1 + 0.75*Z(:); z1 + Z(:)];
-    S = repmat([50,25,10],numel(X),1);
-    C = repmat([1,2,3],numel(X),1);
-    s = S(:);
-    c = C(:);
-    scatter3(x,y,z,s,c)
-    view(40,35)
-    colorbar(hAxes);
-    hold(hAxes, 'on');
-    plot3(hAxes, prev_points(:, 1), prev_points(:, 2), prev_points(:, 3), 'bo', 'MarkerFaceColor', 'b');
-    text(hAxes, prev_points(:, 1), prev_points(:, 2), prev_points(:, 3), arrayfun(@(n) sprintf('S%d', n), 1:size(prev_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
+    scatter3(hAxes, prev_points(:,1), prev_points(:,2), prev_points(:,3), 'bo', 'filled');
+    text(hAxes, prev_points(:,1), prev_points(:,2), prev_points(:,3), arrayfun(@(n) sprintf('S%d', n), 1:size(prev_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
     plotTetrahedron(hAxes, prev_points);
-    
-    title('Step number : ' + string(g_stepNo));
-    std_dev = std(g_points);
-    set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2)), '     z :', num2str(1, 3)]);
+
+    [pointsSortedtemp, ~] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    NelderMead(pointsSortedtemp, g_func);
+
+    xlabel(hAxes,['Step Number : ' + string(g_stepNo)]);
+    view(hAxes, 3);
+    grid(hAxes, 'on');
+
+    % Update volume plot
+    cla(volumePlot);
+    volume = computeVolume(g_points);
+    volume_history{g_stepNo + 1} = volume;
+    plot(volumePlot, 0:g_stepNo, cell2mat(volume_history(1 ,1:g_stepNo + 1)), 'bo-', 'MarkerFaceColor', 'b');
+    hold(volumePlot, 'on');
+    plot(volumePlot, 0:g_stepNo, cell2mat(volume_history(1:g_stepNo+1)), 'ro-', 'MarkerFaceColor', 'b');
+
+
+    cla(stdDevPlot);
+    std_dev = std(Results_points);
+    std_dev_history{g_stepNo + 1} = std_dev;
+    plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
+    hold(stdDevPlot, 'on');
+
+end
+
+function volume = computeVolume(points)
+    % Construct the matrix from the points
+    matrix = [
+        points(1, :) 1;
+        points(2, :) 1;
+        points(3, :) 1;
+        points(4, :) 1
+    ];
+
+    detMatrix = det(matrix);
+    volume = abs(detMatrix) / 6;
 end
 
 function plotTetrahedron(hAxes, pointsSorted)
