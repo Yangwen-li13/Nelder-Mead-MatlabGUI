@@ -3,15 +3,19 @@ clear all; clc;
 %% Before starting the process, change the numbers, function, and initialization.
 % dimensionNumber is the number of the dimension of the function
 dimensionNumber = 2;
+
 % pointsNumber depends on the shape.
 pointsNumber = dimensionNumber + 1;
+
+% Function for our algorithm.
 func = @(x, y) x.^2 + 4*x + 4 + y.^2;
-points = [];
-Results_points = [];
+
 stepNo = 0;
 
-global points_history;
+global area_history points_history std_dev_history;
 points_history = {};
+std_dev_history = {};
+area_history = {};
 
 %% I preferred to take points without using any input, but you can if you want.
 p1 = [4.1, 3.6];
@@ -32,36 +36,62 @@ end
 points_history{1} = points;
 %% After initialization, let's recall functions.
 %% Create GUI
+% Create a figure window
 f = figure('Name', 'Nelder Mead Method', 'Position', [100, 100, 800, 600]);
-hAxes = axes('Parent', f, 'Position', [0.1, 0.3, 0.8, 0.6]);
+
+hAxes = subplot(3, 3, [1 2 4 5], 'Parent', f);
+areaPlot = subplot(3, 3, 3, 'Parent', f);
+stdDevPlot = subplot(3, 3, 6, 'Parent', f);
+
 hButtonNext = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
-                    'Position', [20, 20, 100, 30], ...
-                    'Callback', {@updatePlot, hAxes});
+                        'Position', [260, 20, 100, 30], ...
+                        'Callback', {@updatePlot, hAxes, areaPlot, stdDevPlot});
 
 hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
-                    'Position', [180, 20, 100, 30], ...
-                    'Callback', {@previousPlot, hAxes});
+                        'Position', [380, 20, 100, 30], ...
+                        'Callback', {@previousPlot, hAxes, areaPlot, stdDevPlot});
 
-global standartDeviationScreen;
-standartDeviationScreen = uicontrol('Style', 'text', 'String', 'Std Dev: ', ...
-                    'Position', [320, 20, 200, 30]);
+% Create a text display for the next case
+global nextCase;
+nextCase = uicontrol('Style', 'text', 'String', 'Next Case', ...
+                        'Position', [270, 80, 200, 50]);
+
+global stepCase
+stepCase = uicontrol('Style', 'text', 'String', 'Step Number : 0', ...
+                        'Position', [270, 50, 200, 50]);
 
 
-
-% Initial plot, if you change dimension number, change this area.
+%% Initial plot, if you change dimension number, change this area.
 fcontour(hAxes, func, 'LevelStep', 5);
 colorbar(hAxes);
 hold(hAxes, 'on');
-pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func);
+grid(hAxes, 'minor');
+
+[pointsSorted, Results_points] = sortVectors(pointsNumber, dimensionNumber, points, func);
 plot(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), 'bo', 'MarkerFaceColor', 'b');
 text(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), arrayfun(@(n) sprintf('S%d', n), 1:size(pointsSorted, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 plot(hAxes, [pointsSorted(:, 1); pointsSorted(1, 1)], [pointsSorted(:, 2); pointsSorted(1, 2)], 'r-'); 
 
-title('Step number : ' + string(stepNo));
-global std_dev;
-std_dev = std(points);
-set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2))]);
+% This is to see next step in the figure;
+NelderMead(pointsSorted, func);              
 
+title(hAxes, 'Searching Parameter of the Fin via Nelder-Meads Method');
+
+area = computeArea(points);
+area_history{1} = area;
+
+hold(areaPlot, 'on');
+grid(areaPlot, 'minor');
+plot(areaPlot, stepNo, area, 'ro-', 'MarkerFaceColor', 'b');
+title(areaPlot, 'Area of Triangular');
+
+std_dev = std(Results_points);
+std_dev_history{1} = std_dev;
+
+hold(stdDevPlot, 'on');
+grid(stdDevPlot, 'minor');
+plot(stdDevPlot, stepNo, std_dev, 'ro-', 'MarkerFaceColor', 'r');
+title(stdDevPlot, 'Std Dev Plot');
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -71,17 +101,21 @@ g_dimensionNumber = dimensionNumber;
 g_pointsNumber = pointsNumber;
 g_stepNo = stepNo;
 
-% Callback function to update the plot
-function updatePlot(~, ~, hAxes)
-    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev;
-    global standartDeviationScreen;
+%% Callback function to update the plot
+function updatePlot(~, ~, hAxes, areaPlot, stdDevPlot)
+    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev_history area_history;
+    global stepCase;
 
     if isempty(g_points)
         return; % Exit if points is empty
     end
     
-    pointsSorted = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    [pointsSorted, Results_points] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
     g_points = NelderMead(pointsSorted, g_func);
+
+    [pointsSortedtemp, ~] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    g_points = pointsSortedtemp; 
+    NelderMead(pointsSortedtemp, g_func);
     
     % Ensure points is not empty before plotting
     if isempty(g_points)
@@ -100,14 +134,28 @@ function updatePlot(~, ~, hAxes)
     
     points_history{g_stepNo + 1} = g_points;
 
+    title(hAxes, 'Searching Parameter of the Fin via Nelder-Meads Method');
     
-    title('Step number : ' + string(g_stepNo));
-    std_dev = std(g_points);
-    set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2))]);
+    % Plot mean and std deviation
+    cla(areaPlot);
+    area = computeArea(g_points);
+    area_history{g_stepNo + 1} = area;
+    plot(areaPlot, 0:g_stepNo, cell2mat(area_history(1 ,1:g_stepNo + 1)), 'bo-', 'MarkerFaceColor', 'b');
+    hold(areaPlot, 'on');
+
+    
+    cla(stdDevPlot);
+    std_dev = std(Results_points);
+    std_dev_history{g_stepNo + 1} = std_dev;
+    plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
+    hold(stdDevPlot, 'on');
+
+    set(stepCase, 'String', ['Step Number : ' + string(g_stepNo)]);
+
 end
 
-function previousPlot(~, ~, hAxes)
-    global g_stepNo points_history g_func g_points std_dev standartDeviationScreen;
+function previousPlot(~, ~, hAxes, areaPlot, stdDevPlot)
+    global g_stepNo points_history g_func g_points std_dev_history area_history stepCase g_pointsNumber g_dimensionNumber;
 
     if g_stepNo <= 0
         return; % Exit if there are no previous steps
@@ -117,15 +165,41 @@ function previousPlot(~, ~, hAxes)
     prev_points = points_history{g_stepNo + 1}; % Retrieve previous points
     g_points = prev_points;
 
+
+    [pointsSortedtemp, ~] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    NelderMead(pointsSortedtemp, g_func);
+
     cla(hAxes);
     fcontour(hAxes, g_func, 'LevelStep', 5);
     colorbar(hAxes);
     hold(hAxes, 'on');
     plot(hAxes, prev_points(:, 1), prev_points(:, 2), 'bo', 'MarkerFaceColor', 'b');
     text(hAxes, prev_points(:, 1), prev_points(:, 2), arrayfun(@(n) sprintf('S%d', n), 1:size(prev_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
-    plot(hAxes, [prev_points(:,1); prev_points(1,1)], [prev_points(:,2); prev_points(1,2)], 'r-');
+    plot(hAxes, [prev_points(:, 1); prev_points(1, 1)], [prev_points(:, 2); prev_points(1, 2)], 'r-');
     
-    title('Step number : ' + string(g_stepNo));
-    std_dev = std(g_points);
-    set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2))]);
+    title(hAxes, 'Searching Parameter of the Fin via Nelder-Meads Method');
+    
+    % Plot mean and std deviation
+    cla(areaPlot);
+    plot(areaPlot, 0:g_stepNo, cell2mat(area_history(1 ,1:g_stepNo + 1)), 'bo-', 'MarkerFaceColor', 'b');
+    hold(areaPlot, 'on');
+
+    
+    cla(stdDevPlot);
+    plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
+    hold(stdDevPlot, 'on');
+
+    set(stepCase, 'String', ['Step Number : ' + string(g_stepNo)]);
+
+end
+
+function area = computeArea(points)
+    % Compute the area of the triangle formed by the points
+    x1 = points(1, 1);
+    y1 = points(1, 2);
+    x2 = points(2, 1);
+    y2 = points(2, 2);
+    x3 = points(3, 1);
+    y3 = points(3, 2);
+    area = abs(x1*(y2 - y3) + x2*(y3 - y1) + x3*(y1 - y2)) / 2;
 end
