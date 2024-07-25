@@ -1,5 +1,6 @@
 %% Now, let's apply the algorithm to obtain better case.
 function newPointsVector = NelderMead(SortedPointsVector, func)
+global currentCase;
 
 num_dims = size(SortedPointsVector, 2);
 num_points = size(SortedPointsVector,1);
@@ -27,7 +28,8 @@ newPoint_value = func(newPoint{:});
 % New value is between the last remaining and best value.
 if (newPoint_value < lastRemainingPoint_value && newPoint_value >= bestPoint_value)
     newPointsVector = [remainingPoints; cell2mat(newPoint)];
-    disp('case 1');
+    currentcase = 'Reflection';
+    set(currentCase, 'String', currentcase);
 
 % New value is best value.
 elseif (newPoint_value < bestPoint_value)
@@ -36,10 +38,12 @@ elseif (newPoint_value < bestPoint_value)
     newPoint_2_value = func(newPoint_2{:});
     if(newPoint_2_value < bestPoint_value)
         newPointsVector = [remainingPoints; cell2mat(newPoint_2)];
-        disp('case 2');
+        currentcase = 'Expansion';
+        set(currentCase, 'String', currentcase);
     else
         newPointsVector = [remainingPoints; cell2mat(newPoint)];
-        disp('case 3');
+        currentcase = 'Reflection';
+        set(currentCase, 'String', currentcase);
     end   
 
 % New value is the worst.
@@ -50,7 +54,8 @@ elseif (newPoint_value >= lastRemainingPoint_value)
         n2_value = func(n2{:});
         if (n2_value < newPoint_value)
             newPointsVector = [remainingPoints; cell2mat(n2)];
-            disp('case 4');
+            currentcase = 'Contract Outside';
+            set(currentCase, 'String', currentcase);
         else
             v = zeros(num_points,num_dims);
             for i = 1:num_points
@@ -59,7 +64,8 @@ elseif (newPoint_value >= lastRemainingPoint_value)
                 end
             end
             newPointsVector = cell2mat(v);
-            disp('case 5');
+            currentcase = 'Shrink';
+            set(currentCase, 'String', currentcase);
         end
     elseif (newPoint_value >= worstPoint_value)
         n3 = centroid + (cell2mat(worstPoint) - centroid)/2;
@@ -67,7 +73,8 @@ elseif (newPoint_value >= lastRemainingPoint_value)
         n3_value = func(n3{:});
         if(n3_value < worstPoint_value)
             newPointsVector = [remainingPoints; cell2mat(n3)];
-            disp('case 6');
+            currentcase = 'Contract inside';
+            set(currentCase, 'String', currentcase);
         else
             v = zeros(num_points,num_dims);
             for i = 1:num_points
@@ -76,12 +83,9 @@ elseif (newPoint_value >= lastRemainingPoint_value)
                 end
             end
             newPointsVector = cell2mat(v);
-            disp('case 7');
+            currentcase = 'Shrink';
+            set(currentCase, 'String', currentcase);
         end
     end
 end
 end
-
-
-
-
