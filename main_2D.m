@@ -56,10 +56,6 @@ global nextCase;
 nextCase = uicontrol('Style', 'text', 'String', 'Next Case', ...
                         'Position', [270, 80, 200, 50]);
 
-global stepCase
-stepCase = uicontrol('Style', 'text', 'String', 'Step Number : 0', ...
-                        'Position', [270, 50, 200, 50]);
-
 
 %% Initial plot, if you change dimension number, change this area.
 fcontour(hAxes, func, 'LevelStep', 5);
@@ -75,7 +71,8 @@ plot(hAxes, [pointsSorted(:, 1); pointsSorted(1, 1)], [pointsSorted(:, 2); point
 % This is to see next step in the figure;
 NelderMead(pointsSorted, func);              
 
-title(hAxes, 'Searching Parameter of the Fin via Nelder-Meads Method');
+title(hAxes, 'Searching Parameters of the Fin via Nelder-Meads Method');
+xlabel(hAxes,['Step Number : ' + string(stepNo)]);
 
 area = computeArea(points);
 area_history{1} = area;
@@ -83,7 +80,7 @@ area_history{1} = area;
 hold(areaPlot, 'on');
 grid(areaPlot, 'minor');
 plot(areaPlot, stepNo, area, 'ro-', 'MarkerFaceColor', 'b');
-title(areaPlot, 'Area of Triangular');
+title(areaPlot, 'Area of the Triangle');
 
 std_dev = std(Results_points);
 std_dev_history{1} = std_dev;
@@ -91,7 +88,7 @@ std_dev_history{1} = std_dev;
 hold(stdDevPlot, 'on');
 grid(stdDevPlot, 'minor');
 plot(stdDevPlot, stepNo, std_dev, 'ro-', 'MarkerFaceColor', 'r');
-title(stdDevPlot, 'Std Dev Plot');
+title(stdDevPlot, 'Standart Deviation of Function Values');
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -104,7 +101,7 @@ g_stepNo = stepNo;
 %% Callback function to update the plot
 function updatePlot(~, ~, hAxes, areaPlot, stdDevPlot)
     global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev_history area_history;
-    global stepCase;
+
 
     if isempty(g_points)
         return; % Exit if points is empty
@@ -135,12 +132,14 @@ function updatePlot(~, ~, hAxes, areaPlot, stdDevPlot)
     points_history{g_stepNo + 1} = g_points;
 
     title(hAxes, 'Searching Parameter of the Fin via Nelder-Meads Method');
-    
+    xlabel(hAxes,['Step Number : ' + string(g_stepNo)]);
+
     % Plot mean and std deviation
     cla(areaPlot);
     area = computeArea(g_points);
     area_history{g_stepNo + 1} = area;
     plot(areaPlot, 0:g_stepNo, cell2mat(area_history(1 ,1:g_stepNo + 1)), 'bo-', 'MarkerFaceColor', 'b');
+    xlabel(['Step Number : ' + string(g_stepNo)]);
     hold(areaPlot, 'on');
 
     
@@ -150,7 +149,8 @@ function updatePlot(~, ~, hAxes, areaPlot, stdDevPlot)
     plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
     hold(stdDevPlot, 'on');
 
-    set(stepCase, 'String', ['Step Number : ' + string(g_stepNo)]);
+
+    xlabel(['Step Number : ' + string(g_stepNo)]);
 
 end
 
@@ -177,7 +177,7 @@ function previousPlot(~, ~, hAxes, areaPlot, stdDevPlot)
     text(hAxes, prev_points(:, 1), prev_points(:, 2), arrayfun(@(n) sprintf('S%d', n), 1:size(prev_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
     plot(hAxes, [prev_points(:, 1); prev_points(1, 1)], [prev_points(:, 2); prev_points(1, 2)], 'r-');
     
-    title(hAxes, 'Searching Parameter of the Fin via Nelder-Meads Method');
+    xlabel(hAxes,['Step Number : ' + string(g_stepNo)]);
     
     % Plot mean and std deviation
     cla(areaPlot);
@@ -189,7 +189,7 @@ function previousPlot(~, ~, hAxes, areaPlot, stdDevPlot)
     plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
     hold(stdDevPlot, 'on');
 
-    set(stepCase, 'String', ['Step Number : ' + string(g_stepNo)]);
+   
 
 end
 
