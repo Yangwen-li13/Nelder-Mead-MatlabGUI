@@ -1,4 +1,4 @@
-function pointsSorted = sortVectors(pointsNumber, dimensionNumber, points, func)
+function [pointsSorted, Results_points] = sortVectors(pointsNumber, dimensionNumber, points, func)
 %% We need to sort points according to their values.
 Results_points = zeros(pointsNumber, 1);
 pointsSorted = zeros(pointsNumber, dimensionNumber);
