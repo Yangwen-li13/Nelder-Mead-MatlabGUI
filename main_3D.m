@@ -46,6 +46,10 @@ global standartDeviationScreen;
 standartDeviationScreen = uicontrol('Style', 'text', 'String', 'Std Dev: ', ...
                                 'Position', [320, 20, 200, 30]);
 
+global currentCase;
+currentCase = uicontrol('Style', 'text', 'String', 'Case ', ...
+                    'Position', [640, 20, 200, 30]);
+
 center = mean(points);
 x1 = center(1);
 y1 = center(2);
@@ -72,6 +76,7 @@ title('Step number : ' + string(stepNo));
 global std_dev;
 std_dev = std(points);
 set(standartDeviationScreen, 'String', ['Std Dev     ', 'x :' num2str(std_dev(1,1)), '     y : ', num2str(std_dev(1, 2)), '     z :', num2str(1, 3)]);
+
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
 g_points = points;
