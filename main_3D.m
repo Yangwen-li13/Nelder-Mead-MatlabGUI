@@ -12,7 +12,6 @@ global volume_history points_history std_dev_history;
 points_history = {};
 std_dev_history = {};
 volume_history = {};
-
 %% Initial points
 p1 = [4.1, 3.6, 3];
 p2 = [2.8, 2.4, 10];
