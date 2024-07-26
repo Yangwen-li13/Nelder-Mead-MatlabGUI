@@ -33,7 +33,7 @@ for i = 1:pointsNumber
 end
 %}
 
-points_history{1} = points;
+
 %% After initialization, let's recall functions.
 %% Create GUI
 % Create a figure window
@@ -73,6 +73,7 @@ plot(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), 'bo', 'MarkerFaceColor', 'b'
 text(hAxes, pointsSorted(:, 1), pointsSorted(:, 2), arrayfun(@(n) sprintf('S%d', n), 1:size(pointsSorted, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
 plot(hAxes, [pointsSorted(:, 1); pointsSorted(1, 1)], [pointsSorted(:, 2); pointsSorted(1, 2)], 'r-'); 
 
+points_history{1} = pointsSorted;
 % This is to see next step in the figure;
 NelderMead(pointsSorted, func);              
 
