@@ -21,7 +21,7 @@ p4 = [3, 2, -4];
 
 points = [p1; p2; p3; p4];
 
-points_history{1} = points;
+
 %% Create GUI
 f = figure('Name', 'Nelder Mead Method', 'Position', [100, 100, 800, 600]);
 
@@ -55,7 +55,8 @@ grid(hAxes, 'minor');
 hold(hAxes, 'on');
 plotTetrahedron(hAxes, points);
 
-            
+
+points_history{1} = points;
 title(hAxes, 'Searching Parameters of the Fin via Nelder-Meads Method');
 xlabel(hAxes,'Step Number : ' + string(stepNo));
 
@@ -79,6 +80,11 @@ hold(stdDevPlot, 'on');
 grid(stdDevPlot, 'minor');
 plot(stdDevPlot, stepNo, std_dev, 'ro-', 'MarkerFaceColor', 'r');
 title(stdDevPlot, 'Standart Deviation of Function Values');
+
+axis_limits = [min(points) - 5; max(points) + 5]; % Adding some padding for better visualization
+xlim(hAxes, axis_limits(:,1)');
+ylim(hAxes, axis_limits(:,2)');
+zlim(hAxes, axis_limits(:,3)');
 
 meanpoint = mean(points);
 set(meanPoint, 'String', 'Mean: x = ' + string(meanpoint(1,1)) + newline + 'y = ' + string(meanpoint(1,2)) + '  z = ' + string(meanpoint(1,3)));
@@ -119,6 +125,7 @@ function updatePlot(~, ~, hAxes, volumePlot, stdDevPlot)
     xlabel(hAxes,['Step Number : ' + string(g_stepNo)]);
     view(hAxes, 3);
     grid(hAxes, 'on');
+    
 
     std_dev = std(g_points);
     std_dev_history{g_stepNo + 1} = std_dev;
