@@ -96,6 +96,7 @@ grid(stdDevPlot, 'minor');
 plot(stdDevPlot, stepNo, std_dev, 'ro-', 'MarkerFaceColor', 'r');
 title(stdDevPlot, 'Standart Deviation of Function Values');
 
+global meanpoint;
 meanpoint = mean(points);
 set(meanPoint, 'String', 'Mean Point: x = ' + string(meanpoint(1,1)) + ' y = ' + string(meanpoint(1,2)));
 
