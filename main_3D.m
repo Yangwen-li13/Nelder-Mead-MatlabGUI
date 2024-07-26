@@ -37,9 +37,14 @@ hButtonPrev = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
                         'Position', [380, 20, 100, 30], ...
                         'Callback', {@previousPlot, hAxes, volumePlot, stdDevPlot});
 
-global nextCase;
-nextCase = uicontrol('Style', 'text', 'String', 'Next Case', ...
-                        'Position', [270, 80, 200, 50]);
+
+global nextCase meanPoint;
+
+nextCase = uicontrol('Style', 'text', 'String', 'Next Case', 'FontSize', 10, ...
+                        'Position', [270, 60, 200, 50]);
+
+meanPoint = uicontrol('Style', 'text', 'String', 'Mean :', 'FontSize', 10, ...
+                        'Position', [270, 120, 200, 50]);
 
 %% Initial plot
 cla(hAxes);
@@ -75,6 +80,8 @@ grid(stdDevPlot, 'minor');
 plot(stdDevPlot, stepNo, std_dev, 'ro-', 'MarkerFaceColor', 'r');
 title(stdDevPlot, 'Standart Deviation of Function Values');
 
+meanpoint = mean(points);
+set(meanPoint, 'String', 'Mean: x = ' + string(meanpoint(1,1)) + newline + 'y = ' + string(meanpoint(1,2)) + '  z = ' + string(meanpoint(1,3)));
 
 % Define the global variables
 global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo;
@@ -86,7 +93,7 @@ g_stepNo = stepNo;
 
 %% Callback function to update the plot
 function updatePlot(~, ~, hAxes, volumePlot, stdDevPlot)
-    global g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev_history volume_history;
+    global meanPoint g_points g_func g_dimensionNumber g_pointsNumber g_stepNo points_history std_dev_history volume_history;
     
     if isempty(g_points)
         return;
@@ -131,11 +138,15 @@ function updatePlot(~, ~, hAxes, volumePlot, stdDevPlot)
     plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
     hold(stdDevPlot, 'on');
 
+    meanpoint = mean(g_points);
+    set(meanPoint, 'String', 'Mean: x = ' + string(meanpoint(1,1)) + newline + 'y = ' + string(meanpoint(1,2)) + '  z = ' + string(meanpoint(1,3)));
+
+
 end
 
 %% Callback function to go back to the previous plot
 function previousPlot(~, ~, hAxes, volumePlot, stdDevPlot)
-    global g_stepNo points_history std_dev_history volume_history g_points;
+    global meanPoint g_stepNo points_history std_dev_history volume_history g_points g_pointsNumber g_dimensionNumber g_func;
 
     if g_stepNo <= 0
         return;
@@ -150,7 +161,7 @@ function previousPlot(~, ~, hAxes, volumePlot, stdDevPlot)
     text(hAxes, prev_points(:,1), prev_points(:,2), prev_points(:,3), arrayfun(@(n) sprintf('S%d', n), 1:size(prev_points, 1), 'UniformOutput', false), 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left');
     plotTetrahedron(hAxes, prev_points);
 
-    [pointsSortedtemp, ~] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
+    [pointsSortedtemp, Results_points] = sortVectors(g_pointsNumber, g_dimensionNumber, g_points, g_func);
     NelderMead(pointsSortedtemp, g_func);
 
     xlabel(hAxes,['Step Number : ' + string(g_stepNo)]);
@@ -171,6 +182,10 @@ function previousPlot(~, ~, hAxes, volumePlot, stdDevPlot)
     std_dev_history{g_stepNo + 1} = std_dev;
     plot(stdDevPlot, 0:g_stepNo, cell2mat(std_dev_history(1 ,1:g_stepNo + 1)), 'ro-', 'MarkerFaceColor', 'r');
     hold(stdDevPlot, 'on');
+
+    meanpoint = mean(g_points);
+    set(meanPoint, 'String', 'Mean: x = ' + string(meanpoint(1,1)) + newline + 'y = ' + string(meanpoint(1,2)) + '  z = ' + string(meanpoint(1,3)));
+
 
 end
 
